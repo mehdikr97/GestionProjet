@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [projects, setProjects] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
@@ -13,10 +15,11 @@ const HomePage = () => {
     dateFin: '',
     budget: ''
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
-      .get('http://localhost:9090/api/projet/Afficher')
+      .get('http://localhost:8888/api/projet/Afficher')
       .then((response) => setProjects(response.data))
       .catch((error) =>
         console.error('Erreur lors du chargement des projets:', error)
@@ -26,6 +29,14 @@ const HomePage = () => {
   const toggleForm = () => {
     setShowForm(!showForm);
     setErrorMessage("");
+    setIsEditing(false);
+    setProject({
+      nom: '',
+      description: '',
+      dateDebut: '',
+      dateFin: '',
+      budget: ''
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -33,126 +44,98 @@ const HomePage = () => {
     setErrorMessage("");
 
     try {
-      const response = await axios.post('http://localhost:9090/api/projet/Ajouter', project);
-      setProjects([...projects, response.data]);
+      if (isEditing) {
+        const response = await axios.put(`http://localhost:8888/api/projet/Modifier/${selectedProject._id}`, project);
+        setProjects((prevProjects) =>
+          prevProjects.map((proj) => (proj._id === selectedProject._id ? response.data.updatedProjet : proj))
+        );
+      } else {
+        const response = await axios.post('http://localhost:8888/api/projet/Ajouter', project);
+        setProjects([...projects, response.data]);
+      }
       setShowForm(false);
     } catch (error) {
       if (error.response && error.response.data.message) {
         setErrorMessage(error.response.data.message);
       } else {
-        setErrorMessage("Une erreur s'est produite lors de l'ajout du projet.");
+        setErrorMessage("Une erreur s'est produite lors de l'ajout/modification du projet.");
       }
     }
   };
 
-  const handleSelectProject = (project) => {
+  const handleDelete = async (id) => {
+    try {
+      const response = await axios.delete(`http://localhost:8888/api/projet/Supprimer/${id}`);
+      if (response.status === 200) {
+        setProjects((prevProjects) => prevProjects.filter((project) => project._id !== id));
+        setSelectedProject(null);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression :", error);
+    }
+  };
+
+  const handleEdit = (project) => {
     setSelectedProject(project);
+    setIsEditing(true);
+    setShowForm(true);
+    setProject({
+      nom: project.nom,
+      description: project.description,
+      dateDebut: project.dateDebut,
+      dateFin: project.dateFin,
+      budget: project.budget
+    });
+  };
+
+  const handleViewTasks = (projectId) => {
+    navigate(`/project/${projectId}/tasks`); // Naviguer vers la page des tâches
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 pl-6">
-      <button
-        onClick={toggleForm}
-        className="text-white bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 border border-transparent focus:ring-4 focus:outline-none focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-indigo-600 me-2 mb-2"
-      >
-        Ajouter
-      </button>
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 p-6">
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">Gestion de Projets</h1>
+        <button
+          onClick={toggleForm}
+          className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white py-2 rounded-md mb-4 hover:from-green-500 hover:to-green-700 transition duration-300"
+        >
+          {isEditing ? "Modifier le projet" : "Ajouter un projet"}
+        </button>
 
-      {/* Formulaire d'ajout de projet */}
-      {showForm && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {errorMessage && (
-            <div className="text-red-500 bg-red-100 p-3 rounded-md">
-              {Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-4 bg-gray-100 p-4 rounded-lg">
+            {errorMessage && (
+              <div className="text-red-500 bg-red-100 p-3 rounded-md">
+                {Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage}
+              </div>
+            )}
+
+            <input type="text" placeholder="Nom du projet" value={project.nom} onChange={(e) => setProject({ ...project, nom: e.target.value })} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+            <textarea placeholder="Description du projet" value={project.description} onChange={(e) => setProject({ ...project, description: e.target.value })} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"></textarea>
+            <input type="date" value={project.dateDebut} onChange={(e) => setProject({ ...project, dateDebut: e.target.value })} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+            <input type="date" value={project.dateFin} onChange={(e) => setProject({ ...project, dateFin: e.target.value })} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+            <input type="number" placeholder="Budget" value={project.budget} onChange={(e) => setProject({ ...project, budget: e.target.value })} className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" />
+            <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">{isEditing ? "Modifier le projet" : "Ajouter le projet"}</button>
+          </form>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          {projects.map((project, index) => (
+            <div key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer">
+              <h2 className="text-xl font-bold text-blue-700">{project.nom}</h2>
+              <p className="mt-2 text-gray-700">{project.description}</p>
+              <p className="text-sm text-gray-600">Début: {project.dateDebut} - Fin: {project.dateFin}</p>
+              <p className="text-sm text-gray-600">Budget: {project.budget} DH</p>
+              <div className="mt-4 flex space-x-2">
+                <button onClick={() => handleEdit(project)} className="flex-1 bg-yellow-500 text-white py-1 rounded hover:bg-yellow-600 transition">Modifier</button>
+                <button onClick={() => handleDelete(project._id)} className="flex-1 bg-red-500 text-white py-1 rounded hover:bg-red-600 transition">Supprimer</button>
+                <button onClick={() => handleViewTasks(project._id)} className="flex-1 bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition">Voir les tâches</button>
+              </div>
             </div>
-          )}
-
-          <input
-            type="text"
-            placeholder="Nom du projet"
-            value={project.nom}
-            onChange={(e) => setProject({ ...project, nom: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <textarea
-            placeholder="Description du projet"
-            value={project.description}
-            onChange={(e) => setProject({ ...project, description: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <input
-            type="date"
-            placeholder="Date de début"
-            value={project.dateDebut}
-            onChange={(e) => setProject({ ...project, dateDebut: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <input
-            type="date"
-            placeholder="Date de fin"
-            value={project.dateFin}
-            onChange={(e) => setProject({ ...project, dateFin: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <input
-            type="number"
-            placeholder="Budget"
-            value={project.budget}
-            onChange={(e) => setProject({ ...project, budget: e.target.value })}
-            className="w-full p-2 border border-gray-300 rounded"
-          />
-          <button type="submit" className="w-full bg-indigo-500 text-white py-2 rounded">
-            Ajouter le projet
-          </button>
-        </form>
-      )}
-
-      {/* Liste des projets */}
-      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {projects.map((project, index) => (
-          <div
-            key={index}
-            onClick={() => handleSelectProject(project)}
-            className="p-4 border rounded shadow-lg bg-white cursor-pointer hover:shadow-xl"
-          >
-            <h2 className="text-xl font-bold">{project.nom}</h2>
-            <p className="mt-2">{project.description}</p>
-            <p className="text-sm text-gray-600">Début: {project.dateDebut} - Fin: {project.dateFin}</p>
-            <p className="text-sm text-gray-600">Budget: {project.budget} DH</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Modale pour afficher les détails d'un projet */}
-      {selectedProject && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">{selectedProject.nom}</h2>
-            <p>{selectedProject.description}</p>
-            <p className="text-sm text-gray-600">Début: {selectedProject.dateDebut}</p>
-            <p className="text-sm text-gray-600">Fin: {selectedProject.dateFin}</p>
-            <p className="text-sm text-gray-600">Budget: {selectedProject.budget} DH</p>
-
-            {/* Liste des tâches */}
-            <h3 className="text-lg font-bold mt-4">Tâches</h3>
-            <ul className="list-disc pl-6">
-              {(selectedProject.tasks || []).map((task, index) => (
-                <li key={index}>{task.description}</li>
-              ))}
-            </ul>
-
-            {/* Ajouter une tâche */}
-            
-            {/* Bouton pour fermer la modale */}
-            <button
-              onClick={() => setSelectedProject(null)}
-              className="w-full bg-red-500 text-white py-2 rounded mt-4"
-            >
-              Fermer
-            </button>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };

@@ -3,6 +3,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const bodyparser=require("body-parser")
 const route = require("./Controllers/projetRoute")
+const tacheRoute = require('./Controllers/tacheRoute');
+
 
 
 
@@ -16,12 +18,13 @@ app.use(express.json());
 // Routes     
 
 app.use("/api/projet",route)
+app.use('/api/projet', tacheRoute);
 
 mongoose.connect('mongodb://127.0.0.1:27017/GestionProjet')
   .then(() => console.log(" Connected to MongoDB"))
   .catch((err) => console.error(" Failed to connect to MongoDB:", err.message));
 
-const PORT = process.env.PORT || 9090;
+const PORT = process.env.PORT || 8888;
 app.listen(PORT, () => {
-  console.log(` Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
