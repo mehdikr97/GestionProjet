@@ -8,7 +8,6 @@ const projetSchema = new mongoose.Schema({
   dateFin: { type: Date, required: true },
   budget: { type: Number, required: true }
 });
-
 const Projet = mongoose.model('Projet', projetSchema);
 
 module.exports = Projet;

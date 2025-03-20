@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const bodyparser=require("body-parser")
 const route = require("./Controllers/projetRoute")
 const tacheRoute = require('./Controllers/tacheRoute');
+const resourceRoutes = require('./Controllers/ressourceRoute')
 
 
 
@@ -16,9 +17,9 @@ app.use(express.json());
 
 
 // Routes     
-
 app.use("/api/projet",route)
 app.use('/api/projet', tacheRoute);
+app.use('/api', resourceRoutes);
 
 mongoose.connect('mongodb://127.0.0.1:27017/GestionProjet')
   .then(() => console.log(" Connected to MongoDB"))

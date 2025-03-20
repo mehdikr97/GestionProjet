@@ -78,7 +78,7 @@ import React from 'react';
       <a
         className="text-neutral-800 dark:text-neutral-400"
         href="https://tw-elements.com/"
-      >TW Elements</a>
+      >EL KARKORI EL MEHDI</a>
     </div>
   </footer>
   );

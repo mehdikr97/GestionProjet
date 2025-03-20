@@ -3,44 +3,62 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const ProjectTasksPage = () => {
-  const { projectId } = useParams();
+  const { projectId } = useParams(); // Récupérer l'ID du projet depuis l'URL
   const navigate = useNavigate();
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([]); // Liste des tâches
   const [task, setTask] = useState({
     description: '',
     dateDebut: '',
-    dateFin: ''
-  });
-  const [editingTaskId, setEditingTaskId] = useState(null);
+    dateFin: '',
+  }); 
+  const [editingTaskId, setEditingTaskId] = useState(null); // ID de la tâche en cours d'édition
 
+  // Charger les tâches du projet
   useEffect(() => {
-    axios
-      .get(`http://localhost:8888/api/projet/${projectId}/taches`)
-      .then((response) => setTasks(response.data))
-      .catch((error) => console.error('Erreur lors du chargement des tâches:', error));
+    if (projectId) {
+      axios
+        .get(`http://localhost:8888/api/projet/${projectId}/taches`)
+        .then((response) => setTasks(response.data))
+        .catch((error) => console.error('Erreur lors du chargement des tâches:', error));
+    }
   }, [projectId]);
 
+  // Ajouter ou modifier une tâche
   const handleAddOrEditTask = async () => {
     if (!task.description || !task.dateDebut || !task.dateFin) {
       alert('Veuillez remplir tous les champs.');
       return;
     }
 
+    const formattedTask = {
+      ...task,
+      dateDebut: new Date(task.dateDebut).toISOString(),
+      dateFin: new Date(task.dateFin).toISOString(),
+      projet: projectId,
+    };
+
     try {
+      const url = editingTaskId
+        ? `http://localhost:8888/api/projet/${projectId}/taches/${editingTaskId}`
+        : `http://localhost:8888/api/projet/${projectId}/taches`;
+
+      const method = editingTaskId ? 'put' : 'post';
+      const response = await axios[method](url, formattedTask);
+
       if (editingTaskId) {
-        const response = await axios.put(`http://localhost:8888/api/projet/${projectId}/taches/${editingTaskId}`, task);
         setTasks(tasks.map((t) => (t._id === editingTaskId ? response.data : t)));
-        setEditingTaskId(null);
       } else {
-        const response = await axios.post(`http://localhost:8888/api/projet/${projectId}/taches`, task);
         setTasks([...tasks, response.data]);
       }
+
       setTask({ description: '', dateDebut: '', dateFin: '' });
+      setEditingTaskId(null);
     } catch (error) {
-      console.error('Erreur lors de lajout/modification de la tâche :', error);
+      console.error('Erreur lors de l\'ajout/modification de la tâche :', error);
     }
   };
 
+  // Supprimer une tâche
   const handleDeleteTask = async (taskId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
       try {
@@ -52,6 +70,7 @@ const ProjectTasksPage = () => {
     }
   };
 
+  // Modifier une tâche
   const handleEditTask = (tache) => {
     setTask({
       description: tache.description,
@@ -60,9 +79,12 @@ const ProjectTasksPage = () => {
     });
     setEditingTaskId(tache._id);
   };
-  const handleViewTasks = (projectId) => {
-    navigate(`/project/${projectId}/tasks`); 
+
+  // Naviguer vers la page des ressources d'une tâche
+  const handleViewTasks = (taskId) => {
+    navigate(`/task/${taskId}/resources`);
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-blue-100 p-6">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-lg">
@@ -74,6 +96,7 @@ const ProjectTasksPage = () => {
         </button>
         <h1 className="text-3xl font-bold text-blue-800 mb-6">Gestion des Tâches</h1>
 
+        {/* Formulaire d'ajout/modification de tâche */}
         <div className="mb-8 p-6 bg-gray-50 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold text-blue-700 mb-4">
             {editingTaskId ? 'Modifier la tâche' : 'Ajouter une nouvelle tâche'}
@@ -97,7 +120,7 @@ const ProjectTasksPage = () => {
               value={task.dateFin}
               onChange={(e) => setTask({ ...task, dateFin: e.target.value })}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />      
+            />
             <button
               onClick={handleAddOrEditTask}
               className={`w-full ${editingTaskId ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white py-3 rounded-lg transition duration-300`}
@@ -107,6 +130,7 @@ const ProjectTasksPage = () => {
           </div>
         </div>
 
+        {/* Liste des tâches */}
         <div>
           <h2 className="text-2xl font-bold text-blue-800 mb-4">Liste des Tâches</h2>
           {tasks.length === 0 ? (
@@ -133,8 +157,12 @@ const ProjectTasksPage = () => {
                     >
                       Supprimer
                     </button>
-                    <button onClick={() => handleViewTasks(tache._id)} className="flex-1 bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition">Voir les tâches</button>
-
+                    <button
+                      onClick={() => handleViewTasks(tache._id)}
+                      className="bg-blue-500 text-white py-1 px-3 rounded-lg hover:bg-blue-600 transition duration-300"
+                    >
+                      Voir les ressources
+                    </button>
                   </div>
                 </div>
               ))}

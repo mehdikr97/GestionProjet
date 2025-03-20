@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+import toast, { Toaster } from 'react-hot-toast';
+
+
 const HomePage = () => {
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -16,7 +19,6 @@ const HomePage = () => {
     budget: ''
   });
   const navigate = useNavigate();
-
   useEffect(() => {
     axios
       .get('http://localhost:8888/api/projet/Afficher')
@@ -52,6 +54,8 @@ const HomePage = () => {
       } else {
         const response = await axios.post('http://localhost:8888/api/projet/Ajouter', project);
         setProjects([...projects, response.data]);
+        toast.success('Envoyer avec Success ')
+
       }
       setShowForm(false);
     } catch (error) {
@@ -68,6 +72,9 @@ const HomePage = () => {
       const response = await axios.delete(`http://localhost:8888/api/projet/Supprimer/${id}`);
       if (response.status === 200) {
         setProjects((prevProjects) => prevProjects.filter((project) => project._id !== id));
+        toast.success('Supprimer avec succes . ',{
+          icon:"🤗"
+        })
         setSelectedProject(null);
       }
     } catch (error) {
@@ -89,16 +96,24 @@ const HomePage = () => {
   };
 
   const handleViewTasks = (projectId) => {
-    navigate(`/project/${projectId}/tasks`); // Naviguer vers la page des tâches
+    navigate(`/project/${projectId}/tasks`); 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 p-6">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+<div 
+  className="min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 p-6"
+  style={{ 
+    backgroundImage: "url('https://i.pinimg.com/736x/39/8b/b0/398bb0df12de03c82f4edf2e7f0bcb29.jpg')", // Remplacez par le chemin de votre image
+    backgroundSize: 'cover', // Ajuste la taille de l'image pour couvrir tout l'arrière-plan
+    backgroundPosition: 'center', // Centre l'image
+    backgroundBlendMode: 'overlay', // Superpose le dégradé sur l'image
+  }}
+>      <Toaster/>
+<div className="max-w-8xl mx-auto bg-white bg-opacity-50 p-6 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">Gestion de Projets</h1>
         <button
           onClick={toggleForm}
-          className="w-full bg-gradient-to-r from-green-400 to-green-600 text-white py-2 rounded-md mb-4 hover:from-green-500 hover:to-green-700 transition duration-300"
+          className=" bg-gradient-to-r from-green-400 to-green-600 text-white py-2 rounded-md mb-4 hover:from-green-500 hover:to-green-700 transition duration-300"
         >
           {isEditing ? "Modifier le projet" : "Ajouter un projet"}
         </button>
@@ -120,21 +135,28 @@ const HomePage = () => {
           </form>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-          {projects.map((project, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer">
-              <h2 className="text-xl font-bold text-blue-700">{project.nom}</h2>
-              <p className="mt-2 text-gray-700">{project.description}</p>
-              <p className="text-sm text-gray-600">Début: {project.dateDebut} - Fin: {project.dateFin}</p>
-              <p className="text-sm text-gray-600">Budget: {project.budget} DH</p>
-              <div className="mt-4 flex space-x-2">
-                <button onClick={() => handleEdit(project)} className="flex-1 bg-yellow-500 text-white py-1 rounded hover:bg-yellow-600 transition">Modifier</button>
-                <button onClick={() => handleDelete(project._id)} className="flex-1 bg-red-500 text-white py-1 rounded hover:bg-red-600 transition">Supprimer</button>
-                <button onClick={() => handleViewTasks(project._id)} className="flex-1 bg-blue-500 text-white py-1 rounded hover:bg-blue-600 transition">Voir les tâches</button>
-              </div>
-            </div>
-          ))}
-        </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-6">
+  {projects.map((project, index) => (
+    <div key={index} className="bg-black bg-opacity-50 p-4 rounded-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2">
+     <h2 className="text-2xl font-bold text-white mb-4">{project.nom}</h2>
+     <p className="mt-2 text-white leading-relaxed text-base italic overflow-hidden overflow-ellipsis">  {project.description}
+</p>
+<p className="text-sm text-white mt-3 font-medium">
+  <span className="font-semibold">Début:</span> {project.dateDebut} 
+   <br /><br /> <span className="font-semibold">Fin:</span> {project.dateFin}
+</p>
+<p className="text-sm text-white mt-1 font-medium">
+  <br />
+  <span className="font-semibold">Budget:</span> {project.budget} DH
+</p>
+      <div className="mt-6 flex space-x-3">
+        <button onClick={() => handleEdit(project)} className="flex-1 bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition duration-200">Modifier</button>
+        <button onClick={() => handleDelete(project._id)} className="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition duration-200">Supprimer</button>
+        <button onClick={() => handleViewTasks(project._id)} className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">Voir les tâches</button>
+      </div>
+    </div>
+  ))}
+</div>
       </div>
     </div>
   );
