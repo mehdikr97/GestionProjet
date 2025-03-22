@@ -2,6 +2,8 @@ const express = require("express");
 const Projet = require("../Models/projet");
 const route = express.Router();
 const validate = require("../validation/validationProjet");
+const Tache = require("../Models/tache");
+const Ressource = require("../Models/ressource");
 
 // Ajouter un projet
 route.post("/Ajouter", async (req, res) => {
@@ -42,15 +44,21 @@ route.get("/Afficher", async (req, res) => {
 route.delete("/Supprimer/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const projet = await Projet.deleteOne({ _id: id });
+    const deletedProject = await Projet.findByIdAndDelete(id);
 
-    if (projet.deletedCount === 0) {
-      return res.status(404).json({ message: "Projet non trouvé" });
+    if (!deletedProject) {
+      return res.status(404).json({ message: 'Projet non trouvé.' });
     }
 
-    res.status(200).json({ message: "Projet supprimé", projet });
+    const deletedTasks = await Tache.find({ projet: id });
+    const taskIds = deletedTasks.map(task => task._id);
+
+    await Tache.deleteMany({ projet: id });
+    await Ressource.deleteMany({ tache: { $in: taskIds } });
+
+    res.status(200).json({ message: "Projet, ses tâches et ressources supprimés avec succès" });
   } catch (error) {
-    console.error("Erreur lors de la suppression :", error);
+    console.error("Erreur lors de la suppression:", error);
     res.status(500).json({ error: error.message });
   }
 });

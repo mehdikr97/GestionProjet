@@ -3,7 +3,6 @@ const Tache = require('../Models/tache');
 const route = express.Router();
 
 route.post('/:projectId/taches', async (req, res) => {
-  
   try {
   
     const { description, dateDebut, dateFin } = req.body;
@@ -66,6 +65,8 @@ route.put('/:projectId/taches/:taskId', async (req, res) => {
 
 route.delete('/:projectId/taches/:taskId', async (req, res) => {
   try {
+
+    
     const deletedTask = await Tache.findByIdAndDelete(req.params.taskId); 
     if (!deletedTask) {
       return res.status(404).json({ message: 'Tâche non trouvée.' });
