@@ -30,10 +30,10 @@ route.post('/tache/:taskId/ressources', async (req, res) => {
 });
 
 // Obtenir toutes les ressources d'une tâche
-route.get('/tache/:taskId/ressources', async (req, res) => {
+route.get('/tache/:taskId/ressources/:ressourceId', async (req, res) => {
   try {
-    const taskId = req.params.taskId;
-    const resources = await Resource.find({ tache: taskId }); // Correction : utiliser "tache" au lieu de "tacheId"
+    const ressourceId = req.params.id;
+    const resources = await Resource.find({ ressource: ressourceId }); // Correction : utiliser "tache" au lieu de "tacheId"
 
     res.status(200).json(resources);
   } catch (error) {
@@ -42,7 +42,7 @@ route.get('/tache/:taskId/ressources', async (req, res) => {
 });
 
 // Modifier une ressource
-route.put('/ressources/:id', async (req, res) => {
+route.put('/tache/:taskId/ressources/:id', async (req, res) => {
   try {
     const { nom, type, quantite } = req.body;
     const resourceId = req.params.id;
@@ -59,14 +59,14 @@ route.put('/ressources/:id', async (req, res) => {
   }
 });
 
+
 // Supprimer une ressource
-route.delete('/:taskId/ressources/:resourceId', async (req, res) => {
+route.delete('/tache/:taskId/ressources/:ressourceId', async (req, res) => {
   try {
-    const resourceId = req.params.resourceId;
+    const { ressourceId } = req.params;
 
-    const deletedResource = await Resource.findByIdAndDelete(resourceId);
-
-    if (!deletedResource) {
+    const deletedRessource = await Resource.findByIdAndDelete(ressourceId);
+    if (!deletedRessource) {
       return res.status(404).json({ message: 'Ressource non trouvée.' });
     }
 
@@ -86,9 +86,7 @@ route.delete('/:projectId/taches/:taskId', async (req, res) => {
     if (!deletedTask) {
       return res.status(404).json({ message: 'Tâche non trouvée.' });
     }
-
     await Resource.deleteMany({ tache: taskId });
-
     res.status(200).json({ message: 'Tâche et ressources associées supprimées avec succès.' });
   } catch (err) {
     res.status(500).json({ message: err.message });

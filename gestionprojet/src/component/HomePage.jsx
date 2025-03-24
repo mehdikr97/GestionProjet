@@ -42,8 +42,6 @@ const HomePage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
 
     try {
       if (isEditing) {
@@ -54,6 +52,8 @@ const HomePage = () => {
       } else {
         const response = await axios.post('http://localhost:8888/api/projet/Ajouter', project);
         setProjects([...projects, response.data]);
+        e.preventDefault(); 
+
         toast.success('Envoyer avec Success ')
 
       }
@@ -89,8 +89,8 @@ const HomePage = () => {
     setProject({
       nom: project.nom,
       description: project.description,
-      dateDebut: project.dateDebut,
-      dateFin: project.dateFin,
+      dateDebut: new Date(project.dateDebut).toISOString(),
+      dateFin: new Date(project.dateFin).toISOString(),
       budget: project.budget
     });
   };
@@ -101,13 +101,8 @@ const HomePage = () => {
 
   return (
 <div 
-  className="min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 p-6"
-  style={{ 
-    backgroundImage: "url('https://i.pinimg.com/736x/39/8b/b0/398bb0df12de03c82f4edf2e7f0bcb29.jpg')", // Remplacez par le chemin de votre image
-    backgroundSize: 'cover', // Ajuste la taille de l'image pour couvrir tout l'arrière-plan
-    backgroundPosition: 'center', // Centre l'image
-    backgroundBlendMode: 'overlay', // Superpose le dégradé sur l'image
-  }}
+  className="min-h-screen bg-gradient-to-r from-zinc-500 to-zinc-800 p-6"
+ 
 >      <Toaster/>
 <div className="max-w-8xl mx-auto  bg-opacity-50 p-6 rounded-lg shadow-lg">
         <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">Gestion de Projets</h1>
@@ -132,7 +127,7 @@ const HomePage = () => {
           
 
         {showForm && (
-          <form onSubmit={handleSubmit} className="space-y-4 bg-gray-100 p-4 rounded-lg">
+          <form onSubmit={handleSubmit} className="space-y-4 bg-sky-800 p-4 rounded-lg">
             {errorMessage && (
               <div className="text-red-500 bg-red-100 p-3 rounded-md">
                 {Array.isArray(errorMessage) ? errorMessage.join(", ") : errorMessage}
@@ -155,7 +150,7 @@ const HomePage = () => {
       className="relative p-4 rounded-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 bg-gradient-to-r from-teal-500 to-teal-900"
       style={{
         border: '2px solid transparent',
-        backgroundClip: 'padding-box', // Pour éviter que le dégradé ne déborde sur la bordure
+        backgroundClip: 'padding-box', 
       }}
     >
       {/* Bordure dégradée */}
@@ -173,17 +168,13 @@ const HomePage = () => {
         <h2 className="text-2xl font-bold  mb-4 text-center  text-amber-500">{project.nom}</h2>
         <p className="mt-2 text-white leading-relaxed text-base italic overflow-hidden overflow-ellipsis">
           {project.description}
-        </p>
-        <p className="text-sm text-white mt-3 font-medium">
-          <span className="font-semibold">Début:</span> {project.dateDebut}
-          <br />
-          <br />
-          <span className="font-semibold">Fin:</span> {project.dateFin}
-        </p>
+        </p><br />
+        <p className="text-sm text-white">Début : {new Date(project.dateDebut).toLocaleDateString()}</p><br />
+                    <p className="text-sm text-white">Fin : {new Date(project.dateFin).toLocaleDateString()}</p>
         <p className="text-sm text-white mt-1 font-medium">
           <br />
           <span className="font-semibold">Budget:</span> {project.budget} DH
-        </p>
+        </p><br />
         <div className="mt-6 flex space-x-3">
           <button
             onClick={() => handleEdit(project)}

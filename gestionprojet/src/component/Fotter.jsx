@@ -122,7 +122,7 @@ const Footer = () => {
       </div>
 
       {/* Copyright */}
-      <p className="text-center mt-8">&copy; 2024 - All rights reserved.</p>
+      <p className="text-center mt-8">&copy; 2025 - All rights reserved / EL MEHDI EL KARKORI</p>
     </footer>
   );
 };

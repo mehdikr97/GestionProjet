@@ -8,9 +8,9 @@ function App() {
   return (
     <Router>
       <Navbar />
-
-
+<div className='bg-gradient-to-r from-zinc-500 to-zinc-800 p-6'></div>
       <Routes>
+
         <Route path="/" element={<Home />} />
         <Route path="/project/:projectId/tasks" element={<ProjectTasksPage />} />
         <Route path="/task/:taskId/resources" element={<Ressource />} />

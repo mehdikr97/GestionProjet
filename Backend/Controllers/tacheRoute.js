@@ -65,7 +65,6 @@ route.put('/:projectId/taches/:taskId', async (req, res) => {
 
 route.delete('/:projectId/taches/:taskId', async (req, res) => {
   try {
-
     
     const deletedTask = await Tache.findByIdAndDelete(req.params.taskId); 
     if (!deletedTask) {
